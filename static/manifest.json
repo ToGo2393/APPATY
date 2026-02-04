@@ -1,0 +1,21 @@
+{
+    "short_name": "APPATY",
+    "name": "APPATY Engineering SaaS",
+    "description": "Professional Engineering Tools & Calculators",
+    "icons": [
+        {
+            "src": "https://img.icons8.com/color/192/000000/calculator--v1.png",
+            "type": "image/png",
+            "sizes": "192x192"
+        },
+        {
+            "src": "https://img.icons8.com/color/512/000000/calculator--v1.png",
+            "type": "image/png",
+            "sizes": "512x512"
+        }
+    ],
+    "start_url": ".",
+    "display": "standalone",
+    "theme_color": "#0E1117",
+    "background_color": "#0E1117"
+}
