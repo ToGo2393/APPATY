@@ -12,7 +12,7 @@ import time
 st.set_page_config(
     page_title="APPATY Engineering Toolkit",
     page_icon="⚙️",
-    layout="wide",
+    layout="centered",
     initial_sidebar_state="expanded"
 )
 
@@ -23,11 +23,13 @@ db.init_db()
 auth.init_session()
 
 # PWA & Mobile UX Injection
+# PWA & Mobile UX Injection
 try:
     import utils.ux as ux
     ux.inject_custom_css()
     ux.inject_pwa_meta()
     ux.inject_haptics()
+    ux.inject_auto_select_js()
 except ImportError:
     pass # Fallback if ux module issues
 
@@ -35,6 +37,8 @@ except ImportError:
 def save_log(calc_name, result):
     if st.session_state.user:
         db.add_history_item(st.session_state.user['id'], calc_name, result)
+    else:
+        st.toast("🔐 Login to Save History")
 
 def render_ad_slot(position='top'):
     """Renders a consistent advertisement slot."""
@@ -86,36 +90,44 @@ with st.sidebar:
     st.caption("© 2026 APPATY v2.0")
 
 # --- Main Interface ---
-st.title("Engineering Suite")
+# Top-Right Navigation Layout
+col_header, col_nav = st.columns([3, 2])
 
-# Tab Navigation
+with col_header:
+    st.title("Engineering Suite")
+
+with col_nav:
+    # Navigation Selector (Top-Right)
+    selected_module = st.selectbox(
+        "🛠️ Select Module",
+        [
+            "📐 Dimensions", 
+            "⚡ Power", 
+            "🌡️ Temperature", 
+            "🎈 Pressure",
+            "💡 Electricity", 
+            "💰 Energy Cost",
+            "🔥 Thermodynamics",
+            "🧮 Equation Solver",
+            "🌌 Universal Solver"
+        ]
+    )
+
 # Helper for smart formatting
 smart_fmt = lambda x: f"{x:.8f}".rstrip('0').rstrip('.')
 
-tabs = st.tabs([
-    "📐 Dimensions", 
-    "⚡ Power", 
-    "🌡️ Temperature", 
-    "🎈 Pressure",
-    "💡 Electricity", 
-    "💰 Energy Cost",
-    "🔥 Thermodynamics",
-    "🧮 Equation Solver",
-    "🌌 Universal Solver"
-])
-
-# 1. 📐 Dimensions (Now Tab 0)
-with tabs[0]:
+# 1. 📐 Dimensions
+if selected_module == "📐 Dimensions":
     render_ad_slot()
     st.header("Unit Conversions")
     subtabs = st.tabs(["Length", "Area", "Volume"])
 
     with subtabs[0]:
         c1, c2, c3 = st.columns(3)
-        val = c1.number_input("Value", 1.0, key="len_val", format="%.6f")
+        val = c1.number_input("Value", 0.0, key="len_val", format="%.4f")
         u1 = c2.selectbox("From", ["m", "cm", "mm", "in", "ft", "km", "mi"], key="len_from")
         u2 = c3.selectbox("To", ["m", "cm", "mm", "in", "ft", "km", "mi"], key="len_to")
-        if st.button("Calculate", key="len_btn"):
+        if st.button("Calculate", key="len_btn", use_container_width=True):
             res = calc.convert_length(val, u1, u2)
             res_str = smart_fmt(res)
             st.markdown(f"### Result: {res_str} {u2}")
@@ -123,10 +135,10 @@ with tabs[0]:
 
     with subtabs[1]:
         c1, c2, c3 = st.columns(3)
-        val = c1.number_input("Value", 1.0, key="area_val", format="%.6f")
+        val = c1.number_input("Value", 0.0, key="area_val", format="%.4f")
         u1 = c2.selectbox("From", ["m²", "ft²", "cm²", "in²", "acre"], key="area_from")
         u2 = c3.selectbox("To", ["m²", "ft²", "cm²", "in²", "acre"], key="area_to")
-        if st.button("Calculate", key="area_btn"):
+        if st.button("Calculate", key="area_btn", use_container_width=True):
             res = calc.convert_area(val, u1, u2)
             res_str = smart_fmt(res)
             st.markdown(f"### Result: {res_str} {u2}")
@@ -134,10 +146,10 @@ with tabs[0]:
 
     with subtabs[2]:
         c1, c2, c3 = st.columns(3)
-        val = c1.number_input("Value", 1.0, key="vol_val", format="%.6f")
+        val = c1.number_input("Value", 0.0, key="vol_val", format="%.4f")
         u1 = c2.selectbox("From", ["m³", "L", "Gal", "ft³", "in³"], key="vol_from")
         u2 = c3.selectbox("To", ["m³", "L", "Gal", "ft³", "in³"], key="vol_to")
-        if st.button("Calculate", key="vol_btn"):
+        if st.button("Calculate", key="vol_btn", use_container_width=True):
             res = calc.convert_volume(val, u1, u2)
             res_str = smart_fmt(res)
             st.markdown(f"### Result: {res_str} {u2}")
@@ -146,17 +158,17 @@ with tabs[0]:
     st.markdown("<br>", unsafe_allow_html=True)
     render_ad_slot(position='bottom')
 
-# 2. ⚡ Power (Now Tab 1)
-with tabs[1]:
+# 2. ⚡ Power
+elif selected_module == "⚡ Power":
     render_ad_slot()
     st.header("Power Converter")
     st.latex(r"P_{HP} \approx P_{kW} \times 1.341")
     
     col1, col2 = st.columns(2)
-    val = col1.number_input("Power Value", key="power_val", format="%.2f")
+    val = col1.number_input("Power Value", 0.0, key="power_val", format="%.4f")
     direct = col2.selectbox("Direction", ["kW to HP", "HP to kW"], key="power_dir")
     
-    if st.button("Calculate Power", key="power_btn"):
+    if st.button("Calculate Power", key="power_btn", use_container_width=True):
         res = calc.convert_power(val, direct)
         unit = "HP" if "kW to HP" == direct else "kW"
         res_str = smart_fmt(res)
@@ -166,16 +178,16 @@ with tabs[1]:
     st.markdown("<br>", unsafe_allow_html=True)
     render_ad_slot(position='bottom')
 
-# 3. 🌡️ Temperature (Now Tab 2)
-with tabs[2]:
+# 3. 🌡️ Temperature
+elif selected_module == "🌡️ Temperature":
     render_ad_slot()
     st.header("🌡️ Temperature Converter")
     c1, c2, c3 = st.columns(3)
-    t_val = c1.number_input("Value", value=0.0, format="%.2f", key="temp_val")
+    t_val = c1.number_input("Value", value=0.0, format="%.4f", key="temp_val")
     t_from = c2.selectbox("From", ["Celsius (°C)", "Kelvin (K)", "Fahrenheit (°F)"], key="temp_from")
     t_to = c3.selectbox("To", ["Celsius (°C)", "Kelvin (K)", "Fahrenheit (°F)"], key="temp_to")
     
-    if st.button("Convert Temperature", key="temp_btn"):
+    if st.button("Convert Temperature", key="temp_btn", use_container_width=True):
         # Conversion Logic
         import utils.calculators as calc
         res = calc.convert_temperature(t_val, t_from, t_to)
@@ -201,94 +213,71 @@ with tabs[2]:
     st.markdown("<br>", unsafe_allow_html=True)
     render_ad_slot(position='bottom')
 
-# 4. 🎈 Pressure (Now Tab 3)
-with tabs[3]:
+# 4. 🎈 Pressure (Overhauled)
+elif selected_module == "🎈 Pressure":
     render_ad_slot()
-    st.header("Pressure Solver")
-    st.latex(r'P = \frac{F}{A}')
-    
-    col1, col2 = st.columns(2)
-    target = col1.radio("Solve for", ["P", "F", "A"], horizontal=True, key="press_target")
-    
-    # Dynamic Result Unit Selection
-    res_unit = "Pa"
-    if target == 'P':
-        res_unit = col2.selectbox("Result Unit", ["Pa", "Bar", "Psi"], key="res_unit_p")
-    elif target == 'F':
-        res_unit = col2.selectbox("Result Unit", ["N", "kN", "lbf"], key="res_unit_f")
-    elif target == 'A':
-        res_unit = col2.selectbox("Result Unit", ["m²", "mm²", "cm²", "in²", "ft²", "acre"], key="res_unit_a")
+    st.header("💨 Pressure Suite")
 
-    st.markdown("---")
-    
-    # Inputs with Unit Selection
-    inputs_si = {}
-    
-    c1, c2 = st.columns([2, 1])
-    
-    if target != 'P': 
-        with c1: p_val = st.number_input("Pressure", key="in_p", format="%.4f")
-        with c2: p_unit = st.selectbox("Unit", ["Pa", "Bar", "Psi"], key="in_unit_p")
-        # Normalize to Pa
-        inputs_si['P'] = calc.convert_pressure(p_val, p_unit, "Pa")
+    # Tab 1: Physics Calculation
+    tab1, tab2 = st.tabs(["🔢 Pressure Solver (P=F/A)", "🔄 Unit Converter"])
 
-    if target != 'F': 
-        with c1: f_val = st.number_input("Force", key="in_f", format="%.4f")
-        with c2: f_unit = st.selectbox("Unit", ["N", "kN", "lbf"], key="in_unit_f")
-        # Normalize to N
-        inputs_si['F'] = calc.convert_force(f_val, f_unit, "N")
-
-    if target != 'A': 
-        with c1: a_val = st.number_input("Area", key="in_a", format="%.6f")
-        with c2: a_unit = st.selectbox("Unit", ["m²", "mm²", "cm²", "in²", "ft²", "acre"], key="in_unit_a")
-        # Normalize to m²
-        inputs_si['A'] = calc.convert_area(a_val, a_unit, "m²")
-         
-    if st.button("Calculate Pressure", key="pressure_btn"):
-        # Input Validation Guard
-        valid_inputs = True
-        if target == 'P':
-             if inputs_si.get('A', 0) <= 0:
-                 st.warning("⚠️ Area must be greater than zero to calculate Pressure.")
-                 valid_inputs = False
-        elif target == 'A':
-             if inputs_si.get('P', 0) == 0:
-                 st.warning("⚠️ Pressure must be non-zero to calculate Area.")
-                 valid_inputs = False
+    with tab1:
+        st.latex(r"P = \frac{F}{A}")
+        col1, col2 = st.columns(2)
+        with col1:
+            f = st.number_input("Force", value=0.0, format="%.4f", key="p_f")
+            f_unit = st.selectbox("Unit", ["N", "kN", "lbf"], key="p_f_u")
+        with col2:
+            a = st.number_input("Area", value=0.0, format="%.4f", key="p_a")
+            a_unit = st.selectbox("Unit", ["m²", "mm²", "in²"], key="p_a_u")
         
-        if valid_inputs:
+        if st.button("Calculate Pressure", use_container_width=True):
+            # Normalization logic
             try:
-                # Solve in SI units (Pa, N, m²)
-                res_si = calc.calculate_fluid_pressure(target, **inputs_si)
+                # Normalize Force to N
+                f_norm = calc.convert_force(f, f_unit, "N")
+                # Normalize Area to m²
+                a_norm = calc.convert_area(a, a_unit, "m²")
                 
-                if res_si is not None:
-                    # Convert Result to Selected Unit
-                    final_res = None
-                    if target == 'P':
-                        final_res = calc.convert_pressure(res_si, "Pa", res_unit)
-                    elif target == 'F':
-                        final_res = calc.convert_force(res_si, "N", res_unit)
-                    elif target == 'A':
-                        final_res = calc.convert_area(res_si, "m²", res_unit)
-                    
-                    res_str = smart_fmt(final_res)
-                    st.markdown(f"### Result: {res_str} {res_unit}")
-                    
-                    # Log SI for consistency or formatted string
-                    save_log(f"Pressure Calc {target}", f"{res_str} {res_unit}")
+                if a == 0 or a_norm == 0:
+                     st.error("Mathematical limit reached: Divisor cannot be zero.")
+                elif a_norm > 0:
+                    p_pa = f_norm / a_norm
+                    st.success(f"Calculated Pressure: {p_pa:.4f} Pa")
+                    save_log(f"Pressure P=F/A", f"{p_pa:.4f} Pa")
                 else:
-                    # This branch might be reached if internal calc returns None
-                    st.error("Mathematical limit reached: Check inputs.")
-            except ZeroDivisionError:
-                st.error("Mathematical limit reached: Divisor cannot be zero.")
+                    st.error("Area must be positive")
             except Exception as e:
-                st.error(f"An error occurred: {e}")
-    
+                st.error(f"Error: {e}")
+
+    with tab2:
+        st.subheader("Pressure Unit Converter")
+        # Layout for converter
+        c_col1, c_col2, c_col3 = st.columns([2, 1, 1])
+        with c_col1:
+            p_val = st.number_input("Enter Value", value=0.0, format="%.4f")
+        with c_col2:
+            p_from = st.selectbox("From", ["Bar", "PSI", "kPa", "MPa", "atm"], key="p_from")
+        with c_col3:
+            p_to = st.selectbox("To", ["Bar", "PSI", "kPa", "MPa", "atm"], key="p_to")
+        
+        # Immediate calculation
+        rates = {"Bar": 1.0, "PSI": 14.5038, "kPa": 100.0, "MPa": 0.1, "atm": 0.9869}
+        if p_from in rates and p_to in rates:
+            # Convert to Bar first
+            val_in_bar = p_val / rates[p_from]
+            # Convert to target
+            res = val_in_bar * rates[p_to]
+            
+            st.markdown(f"**Result:** {res:.4f} {p_to}")
+            st.success(f"{p_val} {p_from} = {res:.4f} {p_to}")
+            save_log(f"Pressure Conv {p_from}->{p_to}", f"{res:.4f}")
+
     st.markdown("<br>", unsafe_allow_html=True)
     render_ad_slot(position='bottom')
 
-# 5. 💡 Electricity (Now Tab 4)
-with tabs[4]:
+# 5. 💡 Electricity
+elif selected_module == "💡 Electricity":
     render_ad_slot()
     st.header("Electrical Engineering")
     st.subheader("Ohm's Law")
@@ -298,11 +287,11 @@ with tabs[4]:
     target = col1.selectbox("Target", ["V", "I", "R"], key="ohm_target")
     
     inputs = {}
-    if target != 'V': inputs['V'] = col2.number_input("Voltage (V)", key="ohm_v", format="%.2f")
-    if target != 'I': inputs['I'] = col2.number_input("Current (I)", key="ohm_i", format="%.2f")
-    if target != 'R': inputs['R'] = col2.number_input("Resistance (Ω)", key="ohm_r", format="%.2f")
+    if target != 'V': inputs['V'] = col2.number_input("Voltage (V)", value=0.0, key="ohm_v", format="%.4f")
+    if target != 'I': inputs['I'] = col2.number_input("Current (I)", value=0.0, key="ohm_i", format="%.4f")
+    if target != 'R': inputs['R'] = col2.number_input("Resistance (Ω)", value=0.0, key="ohm_r", format="%.4f")
     
-    if st.button("Calculate Ohm", key="ohm_btn"):
+    if st.button("Calculate Ohm", key="ohm_btn", use_container_width=True):
         res = calc.calculate_ohm_general(target, **inputs)
         unit_map = {'V': 'V', 'I': 'A', 'R': 'Ω'}
         if res is not None:
@@ -313,8 +302,8 @@ with tabs[4]:
     st.markdown("<br>", unsafe_allow_html=True)
     render_ad_slot(position='bottom')
 
-# 6. 💰 Energy Cost (Now Tab 5)
-with tabs[5]:
+# 6. 💰 Energy Cost
+elif selected_module == "💰 Energy Cost":
     render_ad_slot()
     st.header("Appliance Energy Cost")
     st.caption("Calculate monthly cost based on usage.")
@@ -325,11 +314,11 @@ with tabs[5]:
     currency = col1.selectbox("Currency", list(curr_map.keys()), key="cost_curr")
     sym = curr_map[currency]
     
-    watts = col2.number_input("Power Rating (Watts)", 1000.0, key="cost_watts")
-    hours = col1.number_input("Hours used per day", 5.0, key="cost_hours")
-    price = col2.number_input(f"Unit Price ({currency}/kWh)", 0.15, format="%.3f", key="cost_price")
+    watts = col2.number_input("Power Rating (Watts)", 0.0, key="cost_watts", format="%.4f")
+    hours = col1.number_input("Hours used per day", 0.0, key="cost_hours", format="%.4f")
+    price = col2.number_input(f"Unit Price ({currency}/kWh)", 0.0, format="%.4f", key="cost_price")
     
-    if st.button("Calculate Cost", key="cost_btn"):
+    if st.button("Calculate Cost", key="cost_btn", use_container_width=True):
         dkwh, dcost, mcost = calc.calculate_appliance_cost(watts, hours, price)
         if dkwh:
             dkwh_str = smart_fmt(dkwh)
@@ -344,8 +333,8 @@ with tabs[5]:
     st.markdown("<br>", unsafe_allow_html=True)
     render_ad_slot(position='bottom')
 
-# 7. 🔥 Thermodynamics (Now Tab 6)
-with tabs[6]:
+# 7. 🔥 Thermodynamics
+elif selected_module == "🔥 Thermodynamics":
     render_ad_slot()
     st.header("Thermodynamics")
     st.subheader("Heat Transfer")
@@ -377,17 +366,17 @@ with tabs[6]:
             st.info(f"Specific Heat: {c_val}")
         
     with col1:
-        c_input = st.number_input("Specific Heat c (kJ/kg·K)", value=c_val, disabled=(mat != "Manual"), format="%.4f", step=0.0001)
+        c_input = st.number_input("Specific Heat c (kJ/kg·K)", value=0.0 if mat == "Manual" else c_val, disabled=(mat != "Manual"), format="%.4f", step=0.0001)
         
     with col2:
         # High precision mass input
-        m = st.number_input("Mass (kg)", min_value=0.001, value=1.0, step=0.01, format="%.3f")
+        m = st.number_input("Mass (kg)", min_value=0.001, value=0.0, step=0.01, format="%.4f")
         
     with col3:
-        t1 = st.number_input("Initial Temp T1 (K)", 300.0, format="%.2f")
-        t2 = st.number_input("Final Temp T2 (K)", 350.0, format="%.2f")
+        t1 = st.number_input("Initial Temp T1 (K)", 0.0, format="%.4f")
+        t2 = st.number_input("Final Temp T2 (K)", 0.0, format="%.4f")
         
-    if st.button("Calculate", key="thermo_btn"):
+    if st.button("Calculate", key="thermo_btn", use_container_width=True):
         if m <= 0:
             st.warning("⚠️ Mass must be a positive value.")
         else:
@@ -400,8 +389,8 @@ with tabs[6]:
     st.markdown("<br>", unsafe_allow_html=True)
     render_ad_slot(position='bottom')
 
-# 8. 🧮 Equation Solver (Now Tab 7)
-with tabs[7]:
+# 8. 🧮 Equation Solver
+elif selected_module == "🧮 Equation Solver":
     render_ad_slot()
     st.header("Algebraic Solver (Coefficient Method)")
     
@@ -442,7 +431,7 @@ with tabs[7]:
         a = c1.text_input("Coefficient a", "1")
         b = c2.text_input("Coefficient b", "0")
         
-        if st.button("Solve 1st Deg", key="solve_1d"):
+        if st.button("Solve 1st Deg", key="solve_1d", use_container_width=True):
             res = algebra.solve_linear_1var(a, b)
             st.success("Solution Found:")
             st.latex(f"x = {format_res(res)}")
@@ -462,7 +451,7 @@ with tabs[7]:
         b2 = c5.text_input("b2", "-1")
         c2_val = c6.text_input("c2", "2")
         
-        if st.button("Solve System", key="solve_sys_1d"):
+        if st.button("Solve System", key="solve_sys_1d", use_container_width=True):
             import sympy as sp
             res = algebra.solve_linear_2vars([a1, b1, c1_val], [a2, b2, c2_val])
             if isinstance(res, dict):
@@ -480,7 +469,7 @@ with tabs[7]:
         b = c2.text_input("b", "0")
         c = c3.text_input("c", "-4")
         
-        if st.button("Solve Quadratic", key="solve_quad"):
+        if st.button("Solve Quadratic", key="solve_quad", use_container_width=True):
             res = algebra.solve_quadratic_1var(a, b, c)
             if isinstance(res, list):
                 st.success("Solution Found:")
@@ -512,7 +501,7 @@ with tabs[7]:
             else:
                 coeffs2 = [st.text_input("a (Eq2)", "0", key="l2a"), st.text_input("b (Eq2)", "1", key="l2b"), st.text_input("c (Eq2)", "2", key="l2c")]
 
-        if st.button("Find Intersection", key="solve_inter"):
+        if st.button("Find Intersection", key="solve_inter", use_container_width=True):
             import sympy as sp
             res = algebra.solve_quadratic_system(t1, coeffs1, t2, coeffs2)
             
@@ -566,7 +555,7 @@ with tabs[7]:
         for i in range(degree, -1, -1):
             col_idx = (degree - i) % 2
             with cols[col_idx]:
-                 coeffs_dict[i] = st.number_input(f"c_{i} (x^{i})", value=1.0 if i==degree else 0.0, key=f"high_deg_c_{i}")
+                 coeffs_dict[i] = st.number_input(f"c_{i} (x^{i})", value=0.0, key=f"high_deg_c_{i}", format="%.4f")
 
         if st.button("Calculate", key="solve_high_deg", use_container_width=True):
             res = algebra.solve_poly_high_deg(coeffs_dict)
@@ -587,8 +576,8 @@ with tabs[7]:
     st.markdown("<br>", unsafe_allow_html=True)
     render_ad_slot(position='bottom')
 
-# 9. 🌌 Universal Solver (Now Tab 8)
-with tabs[8]:
+# 9. 🌌 Universal Solver
+elif selected_module == "🌌 Universal Solver":
     render_ad_slot()
     st.header("Universal Equation Solver")
     st.info("Dynamically generate and solve systems of equations.")
@@ -626,13 +615,13 @@ with tabs[8]:
                     
                     for d in range(degree, 0, -1):
                         with cols[(degree - d) % 2]:
-                            coeff = st.number_input(f"Coeff ${vars_str[j]}^{d}$", value=0.0, key=f"univ_c_{i}_{j}_{d}")
+                            coeff = st.number_input(f"Coeff ${vars_str[j]}^{d}$", value=0.0, key=f"univ_c_{i}_{j}_{d}", format="%.4f")
                             if coeff != 0:
                                 eq_expr += coeff * (var_sym**d)
                 
                 # Constant
                 st.markdown("---")
-                const = st.number_input(f"Constant (Eq {i+1})", value=0.0, key=f"univ_const_{i}")
+                const = st.number_input(f"Constant (Eq {i+1})", value=0.0, key=f"univ_const_{i}", format="%.4f")
                 eq_expr += const
                 equations.append(eq_expr)
                 
@@ -694,3 +683,4 @@ with tabs[8]:
     
     st.markdown("<br>", unsafe_allow_html=True)
     render_ad_slot(position='bottom')
+
