@@ -683,4 +683,3 @@ elif selected_module == "🌌 Universal Solver":
     
     st.markdown("<br>", unsafe_allow_html=True)
     render_ad_slot(position='bottom')
-
