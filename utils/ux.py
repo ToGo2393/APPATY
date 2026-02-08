@@ -66,6 +66,31 @@ def inject_custom_css():
             background-color: #0F1423;
             border-right: 1px solid #1F2937;
         }
+
+        /* --- VISIBILITY FIXES --- */
+        /* Global Text and Headers */
+        html, body, [data-testid="stWidgetLabel"], .stMarkdown, p, label {
+            color: #E0E0E0 !important;
+        }
+        h1, h2, h3, h4, h5, h6 {
+            color: #FFFFFF !important;
+        }
+
+        /* Selectbox Styling - Main View */
+        div[data-baseweb="select"] > div {
+            color: white !important; 
+            background-color: #171F2E !important;
+        }
+
+        /* Dropdown menu options visibility */
+        div[data-baseweb="popover"] li, div[data-baseweb="popover"] div {
+            color: #111827 !important; /* Dark text for light dropdown background provided by browser/streamlit defaults */
+        }
+        
+        /* Ensure specific widget labels are visible */
+        .stNumberInput label, .stSelectbox label, .stTextInput label {
+            color: #E2E8F0 !important;
+        }
     </style>
     """, unsafe_allow_html=True)
 
